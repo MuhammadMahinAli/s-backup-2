@@ -11,7 +11,6 @@ import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AboutUs from "./pages/about_us";
-import GetHelp from "./pages/get_help";
 import Blog from "./pages/blog";
 import Contact from "./pages/contact";
 import Community from "./pages/community";
@@ -19,6 +18,10 @@ import PeerAdvocates from "./pages/PeerAdvocates";
 import MythsVsFacts from "./pages/Mythsvsfacts";
 import DebugCloudinary from "./pages/DebugCloudinary";
 import { getOrCreateAnonId } from "./lib/anon";
+import { lazy, Suspense } from "react";
+
+// Lazy-load GetHelp page (uses Leaflet)
+const GetHelp = lazy(() => import("./pages/get_help"));
 
 const queryClient = new QueryClient();
 
@@ -41,7 +44,7 @@ const App = () => {
               <Route path="/blog" element={<Blog />} />
               <Route path="/community" element={<Community />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/get-help" element={<GetHelp />} />
+              <Route path="/get-help" element={<Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><GetHelp /></Suspense>} />
               <Route path="/peer-advocates" element={<PeerAdvocates />} />
               <Route path="/myths-vs-facts" element={<MythsVsFacts />} />
               <Route path="/debug/cloudinary" element={<DebugCloudinary />} />
