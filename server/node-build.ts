@@ -17,19 +17,23 @@ app.get('/healthz', (_req, res) => res.send('ok'));
 // Serve SPA
 const spaDir = path.join(process.cwd(), 'dist', 'spa');
 app.use(express.static(spaDir));
-app.get('*', (_req, res) => res.sendFile(path.join(spaDir, 'index.html')));
+
+/** ❌ remove this (Express v5 + path-to-regexp v6 throws)
+// app.get('*', (_req, res) => res.sendFile(path.join(spaDir, 'index.html')));
+*/
+
+/** ✅ replace with a safe fallback (kept last) */
+app.use((_req, res) => {
+  res.sendFile(path.join(spaDir, 'index.html'));
+});
 
 // Start server (do DB connect here if needed)
 async function start() {
   try {
-    // Connect to MongoDB if URI is provided
     if (process.env.MONGODB_URI) {
       await connectToDatabase();
     }
-
-    // Start rate limiter cleanup
     startRateLimiterCleanup();
-
     app.listen(PORT, () => {
       console.log('Server listening on', PORT);
     });
