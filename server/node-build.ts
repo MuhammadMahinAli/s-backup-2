@@ -1,50 +1,53 @@
-import path from "path";
-import express from "express";
-import { createServer } from "./index";
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createServer } from './index.js';
+import { connectToDatabase } from './lib/mongodb.js';
+import { startRateLimiterCleanup } from './lib/rateLimiter.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = createServer();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
-// Resolve current directory (for ESM)
-const __dirname = import.meta.dirname;
+// Health check for Render
+app.get('/healthz', (_req, res) => res.send('ok'));
 
-// Path to your built frontend files
-const distPath = path.join(__dirname, "../spa");
+// Serve SPA
+const spaDir = path.join(process.cwd(), 'dist', 'spa');
+app.use(express.static(spaDir));
+app.get('*', (_req, res) => res.sendFile(path.join(spaDir, 'index.html')));
 
-// Serve static assets (React/Vite/Next build output)
-app.use(express.static(distPath));
+// Start server (do DB connect here if needed)
+async function start() {
+  try {
+    // Connect to MongoDB if URI is provided
+    if (process.env.MONGODB_URI) {
+      await connectToDatabase();
+    }
 
-/**
- * Simple health check route for Render
- */
-app.get("/health", (_req, res) => {
-  res.json({ ok: true });
-});
+    // Start rate limiter cleanup
+    startRateLimiterCleanup();
 
-/**
- * SPA fallback:
- * Serve index.html for any non-API route
- * (avoids path-to-regexp error from app.get("*"))
- */
-app.get(/^(?!\/api\/|\/health).*/, (_req, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
-});
+    app.listen(PORT, () => {
+      console.log('Server listening on', PORT);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
 
-app.listen(port, () => {
-  console.log(`🚀 SHY Community server running on port ${port}`);
-  console.log(`🌐 Frontend available at http://localhost:${port}`);
-  console.log(`🔧 API base URL: http://localhost:${port}/api`);
-});
-
-/**
- * Graceful shutdown handlers
- */
-process.on("SIGTERM", () => {
-  console.log("🛑 Received SIGTERM, shutting down gracefully");
+// Graceful shutdown handlers
+process.on('SIGTERM', () => {
+  console.log('🛑 Received SIGTERM, shutting down gracefully');
   process.exit(0);
 });
 
-process.on("SIGINT", () => {
-  console.log("🛑 Received SIGINT, shutting down gracefully");
+process.on('SIGINT', () => {
+  console.log('🛑 Received SIGINT, shutting down gracefully');
   process.exit(0);
 });
+
+start();

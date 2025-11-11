@@ -115,8 +115,13 @@ export function getRateLimitStatus(anonId: string): { remaining: number; resetAt
   };
 }
 
-// Run cleanup every 5 minutes to prevent memory leaks
-if (typeof setInterval !== 'undefined') {
-  setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
+/**
+ * Start the rate limiter cleanup interval
+ * Should be called from the main server entry point
+ */
+export function startRateLimiterCleanup(): void {
+  if (typeof setInterval !== 'undefined') {
+    setInterval(cleanupRateLimitStore, 5 * 60 * 1000);
+  }
 }
 

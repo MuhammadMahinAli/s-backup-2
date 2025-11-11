@@ -1,15 +1,20 @@
 import mongoose from 'mongoose';
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable');
-}
+// Don't throw at import time - check when connecting
+function getMongoConfig() {
+  if (!process.env.MONGODB_URI) {
+    throw new Error('Please define the MONGODB_URI environment variable');
+  }
 
-if (!process.env.MONGODB_DB) {
-  throw new Error('Please define the MONGODB_DB environment variable');
-}
+  if (!process.env.MONGODB_DB) {
+    throw new Error('Please define the MONGODB_DB environment variable');
+  }
 
-const MONGODB_URI = process.env.MONGODB_URI;
-const MONGODB_DB = process.env.MONGODB_DB;
+  return {
+    uri: process.env.MONGODB_URI,
+    db: process.env.MONGODB_DB,
+  };
+}
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -41,12 +46,13 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
 
   // Return existing connection promise if one is in progress
   if (!cached.promise) {
+    const config = getMongoConfig();
     const opts = {
       bufferCommands: false,
-      dbName: MONGODB_DB,
+      dbName: config.db,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+    cached.promise = mongoose.connect(config.uri, opts).then((mongooseInstance) => {
       console.log('✅ MongoDB connected successfully');
       return mongooseInstance;
     });
