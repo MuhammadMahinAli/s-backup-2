@@ -25,7 +25,7 @@ function pickReply(data) {
 
 router.post("/chat", async (req, res) => {
   try {
-    const { sessionId, message, userMeta } = req.body;
+    const { sessionId, message, action: bodyAction, location, userMeta } = req.body;
 
     console.log("📩 Incoming /api/chat body:", req.body);
 
@@ -38,11 +38,17 @@ router.post("/chat", async (req, res) => {
       return res.status(500).json({ ok: false, reply: "Server misconfigured." });
     }
 
+    const action = bodyAction ?? "sendMessage";
+    const chatInput = message.trim();
+
     const payload = {
       sessionId: String(sessionId || Date.now()),
-      action: "sendMessage",
-      chatInput: message.trim(),
-      userMeta: userMeta || {}
+      action,
+      chatInput,
+      location: location ?? undefined,
+      userMeta: {
+        ...(userMeta || {}),
+      },
     };
 
     console.log("➡️ Sending to n8n:", N8N_WEBHOOK_URL, payload);

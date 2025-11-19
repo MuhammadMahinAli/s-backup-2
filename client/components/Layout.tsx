@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { ReactNode, useState } from "react";
-import Chatbot from "./Chatbot";
+import ShyChat from "./ShyChat";
 
 interface LayoutProps {
   children: ReactNode;
@@ -21,7 +21,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Navigation Header */}
-      <header className="w-full bg-[#D4EDF4] px-4 sm:px-6 lg:px-8 py-4 shadow-sm">
+      <header className="sticky top-0 z-50 w-full bg-[#D4EDF4] px-4 sm:px-6 lg:px-8 py-4 shadow-sm">
         <nav className="flex items-center justify-between max-w-7xl mx-auto">
           {/* Logo Section */}
           <div className="flex items-center">
@@ -54,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
                   : "text-[#315E5B]"
               }`}
             >
-              About
+              About Us
             </Link>
             <Link
               to="/blog"
@@ -74,7 +74,7 @@ export default function Layout({ children }: LayoutProps) {
                   : "text-[#315E5B]"
               }`}
             >
-              Community
+              Community Forum
             </Link>
             <Link
               to="/contact"
@@ -140,7 +140,7 @@ export default function Layout({ children }: LayoutProps) {
                     : "text-[#315E5B]"
                 }`}
               >
-                About
+                About Us
               </Link>
               <Link
                 to="/blog"
@@ -162,7 +162,7 @@ export default function Layout({ children }: LayoutProps) {
                     : "text-[#315E5B]"
                 }`}
               >
-                Community
+                Community Forum
               </Link>
               <Link
                 to="/contact"
@@ -272,7 +272,7 @@ export default function Layout({ children }: LayoutProps) {
       </footer>
 
       {/* Chatbot - Appears on all pages */}
-      <Chatbot />
+      <ShyChat />
     </div>
   );
 }
