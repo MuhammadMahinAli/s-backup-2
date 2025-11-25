@@ -3,6 +3,7 @@ import { MessageCircle, Image as ImageIcon, X, AlertCircle, Trash2 } from "lucid
 import { uploadToCloudinary } from "@/lib/uploadToCloudinary";
 import { HAS_CLOUDINARY } from "@/lib/uploadImage";
 import { getOrCreateAnonId } from "@/lib/anon";
+import { getCurrentPeerAdvocate, isAuthenticated } from "@/lib/auth";
 import type { PostResponse, CommentResponse, FeedResponse, CreatePostRequest, CreateCommentRequest, DeletePostResponse, PostImage } from "@shared/api";
 
 export default function Community() {
@@ -42,6 +43,10 @@ export default function Community() {
   // Delete
   const [deletingPost, setDeletingPost] = useState<string | null>(null);
 
+  // Peer Advocate
+  const [isPeerAdvocate, setIsPeerAdvocate] = useState(false);
+  const [peerAdvocateName, setPeerAdvocateName] = useState("");
+
   const topics = [
     "mental-health",
     "anxiety",
@@ -52,6 +57,18 @@ export default function Community() {
     "relationships",
     "stress"
   ];
+
+  // Check if logged in as peer advocate on mount
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const currentUser = getCurrentPeerAdvocate();
+      if (currentUser) {
+        setIsPeerAdvocate(true);
+        setPeerAdvocateName(currentUser.nickname);
+        setCommentNickname(currentUser.nickname); // Auto-fill comment nickname
+      }
+    }
+  }, []);
 
   // Load feed on mount and when filters change
   useEffect(() => {
@@ -256,7 +273,7 @@ export default function Community() {
     try {
       const commentData: CreateCommentRequest = {
         postId,
-        nickname: commentNickname.trim() || "Anonymous",
+        nickname: isPeerAdvocate ? peerAdvocateName : (commentNickname.trim() || "Anonymous"),
         text: commentText.trim(),
       };
 
@@ -767,14 +784,26 @@ export default function Community() {
                   <div className="border-t border-grey-96 pt-4 space-y-4">
                     {/* Comment Form */}
                     <div className="flex flex-col gap-2">
-                      <input
-                        type="text"
-                        value={commentNickname}
-                        onChange={(e) => setCommentNickname(e.target.value)}
-                        placeholder="Your nickname (optional)"
-                        className="h-8 px-3 rounded-2xl border border-grey-90 bg-transparent shadow-sm font-geist text-sm placeholder:text-grey-45"
-                        disabled={postingComment}
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={commentNickname}
+                          onChange={(e) => !isPeerAdvocate && setCommentNickname(e.target.value)}
+                          placeholder="Your nickname (optional)"
+                          className={`h-8 px-3 rounded-2xl border shadow-sm font-geist text-sm placeholder:text-grey-45 ${
+                            isPeerAdvocate 
+                              ? 'bg-teal-50 border-teal-300 text-teal-700 font-medium cursor-not-allowed' 
+                              : 'border-grey-90 bg-transparent'
+                          }`}
+                          disabled={postingComment || isPeerAdvocate}
+                          readOnly={isPeerAdvocate}
+                        />
+                        {isPeerAdvocate && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">
+                            PEER ADVOCATE ★
+                          </span>
+                        )}
+                      </div>
                       <div className="flex gap-2">
                         <input
                           type="text"
@@ -817,10 +846,15 @@ export default function Community() {
                               {comment.nickname.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-baseline gap-2">
+                              <div className="flex items-baseline gap-2 flex-wrap">
                                 <span className="font-geist font-semibold text-sm text-azure-11">
                                   {comment.nickname}
                                 </span>
+                                {comment.isPeerAdvocate && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 text-[10px] font-medium whitespace-nowrap">
+                                    PEER ADVOCATE ★
+                                  </span>
+                                )}
                                 <span className="font-geist text-xs text-azure-46">
                                   {new Date(comment.createdAt).toLocaleString()}
                                 </span>

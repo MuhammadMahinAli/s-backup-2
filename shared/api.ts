@@ -68,6 +68,7 @@ export interface CommentResponse {
   postId: string;
   nickname: string;
   text: string;
+  isPeerAdvocate: boolean;
   createdAt: string;
 }
 
@@ -90,4 +91,57 @@ export interface DeletePostResponse {
 // Error responses
 export interface ApiError {
   error: string;
+}
+
+/**
+ * Peer Advocate API Types
+ */
+
+// Peer Advocate interface
+export interface PeerAdvocateProfile {
+  email: string;
+  nickname: string;
+  profileImage: string;
+  bio?: string;
+}
+
+// POST /api/peer-advocate/signup
+export interface SignupPeerAdvocateRequest {
+  email: string;
+  password: string;
+  nickname: string;
+}
+
+export interface SignupPeerAdvocateResponse {
+  success: boolean;
+  advocate: PeerAdvocateProfile;
+}
+
+// POST /api/peer-advocate/login
+export interface LoginPeerAdvocateRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginPeerAdvocateResponse {
+  success: boolean;
+  advocate: PeerAdvocateProfile & { _id: string };
+}
+
+// GET /api/peer-advocate/all
+export interface PeerAdvocateCard {
+  nickname: string;
+  profileImage: string;
+  bio?: string;
+  memberSince: string;
+  email: string;
+}
+
+export interface GetAllPeerAdvocatesResponse {
+  advocates: PeerAdvocateCard[];
+}
+
+// GET /api/peer-advocate/check
+export interface CheckPeerAdvocateResponse {
+  isPeerAdvocate: boolean;
 }

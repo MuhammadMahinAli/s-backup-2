@@ -38,54 +38,88 @@ export default function Layout({ children }: LayoutProps) {
           <div className="hidden md:flex items-center gap-8 mr-8">
             <Link
               to="/"
-              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${
-                isActive("/") 
-                  ? "text-[#006D68] font-semibold" 
+              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${isActive("/")
+                  ? "text-[#006D68] font-semibold"
                   : "text-[#315E5B]"
-              }`}
+                }`}
             >
               Home
             </Link>
             <Link
               to="/about"
-              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${
-                isActive("/about") 
-                  ? "text-[#006D68] font-semibold" 
+              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${isActive("/about")
+                  ? "text-[#006D68] font-semibold"
                   : "text-[#315E5B]"
-              }`}
+                }`}
             >
               About Us
             </Link>
             <Link
               to="/blog"
-              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${
-                isActive("/blog") 
-                  ? "text-[#006D68] font-semibold" 
+              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${isActive("/blog")
+                  ? "text-[#006D68] font-semibold"
                   : "text-[#315E5B]"
-              }`}
+                }`}
             >
               Blog
             </Link>
             <Link
               to="/community"
-              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${
-                isActive("/community") 
-                  ? "text-[#006D68] font-semibold" 
+              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${isActive("/community")
+                  ? "text-[#006D68] font-semibold"
                   : "text-[#315E5B]"
-              }`}
+                }`}
             >
               Community Forum
             </Link>
             <Link
               to="/contact"
-              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${
-                isActive("/contact") 
-                  ? "text-[#006D68] font-semibold" 
+              className={`text-lg font-medium transition-colors hover:text-[#006D68] ${isActive("/contact")
+                  ? "text-[#006D68] font-semibold"
                   : "text-[#315E5B]"
-              }`}
+                }`}
             >
               Contact
             </Link>
+          </div>
+
+          {/* Student Auth Buttons - Desktop */}
+          <div className="hidden md:flex items-center gap-3 mr-4">
+            {typeof window !== 'undefined' && localStorage.getItem('authToken') ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="text-[#315E5B] hover:text-[#006D68] font-medium transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('authUser');
+                    window.location.href = '/';
+                  }}
+                  className="text-[#315E5B] hover:text-[#006D68] font-medium transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-[#315E5B] hover:text-[#006D68] font-medium transition-colors px-4 py-2"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-white text-[#006D68] px-4 py-2 rounded-full font-medium shadow hover:shadow-md transition-all"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Get Help Button - Desktop */}
@@ -98,7 +132,7 @@ export default function Layout({ children }: LayoutProps) {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-[#315E5B] hover:text-[#006D68] transition-colors p-2"
               aria-label="Toggle menu"
@@ -123,58 +157,94 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 to="/"
                 onClick={closeMobileMenu}
-                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${
-                  isActive("/") 
-                    ? "text-[#006D68] font-semibold bg-white/50" 
+                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${isActive("/")
+                    ? "text-[#006D68] font-semibold bg-white/50"
                     : "text-[#315E5B]"
-                }`}
+                  }`}
               >
                 Home
               </Link>
               <Link
                 to="/about"
                 onClick={closeMobileMenu}
-                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${
-                  isActive("/about") 
-                    ? "text-[#006D68] font-semibold bg-white/50" 
+                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${isActive("/about")
+                    ? "text-[#006D68] font-semibold bg-white/50"
                     : "text-[#315E5B]"
-                }`}
+                  }`}
               >
                 About Us
               </Link>
               <Link
                 to="/blog"
                 onClick={closeMobileMenu}
-                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${
-                  isActive("/blog") 
-                    ? "text-[#006D68] font-semibold bg-white/50" 
+                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${isActive("/blog")
+                    ? "text-[#006D68] font-semibold bg-white/50"
                     : "text-[#315E5B]"
-                }`}
+                  }`}
               >
                 Blog
               </Link>
               <Link
                 to="/community"
                 onClick={closeMobileMenu}
-                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${
-                  isActive("/community") 
-                    ? "text-[#006D68] font-semibold bg-white/50" 
+                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${isActive("/community")
+                    ? "text-[#006D68] font-semibold bg-white/50"
                     : "text-[#315E5B]"
-                }`}
+                  }`}
               >
                 Community Forum
               </Link>
               <Link
                 to="/contact"
                 onClick={closeMobileMenu}
-                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${
-                  isActive("/contact") 
-                    ? "text-[#006D68] font-semibold bg-white/50" 
+                className={`text-lg font-medium transition-colors hover:text-[#006D68] px-4 py-2 rounded-lg ${isActive("/contact")
+                    ? "text-[#006D68] font-semibold bg-white/50"
                     : "text-[#315E5B]"
-                }`}
+                  }`}
               >
                 Contact
               </Link>
+
+              {/* Student Auth buttons for mobile */}
+              {typeof window !== 'undefined' && localStorage.getItem('authToken') ? (
+                <>
+                  <Link
+                    to="/dashboard"
+                    onClick={closeMobileMenu}
+                    className="text-lg font-medium text-[#315E5B] hover:text-[#006D68] px-4 py-2 rounded-lg"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('authToken');
+                      localStorage.removeItem('authUser');
+                      window.location.href = '/';
+                    }}
+                    className="text-lg font-medium text-[#315E5B] hover:text-[#006D68] px-4 py-2 rounded-lg text-left"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={closeMobileMenu}
+                    className="text-lg font-medium text-[#315E5B] hover:text-[#006D68] px-4 py-2 rounded-lg"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={closeMobileMenu}
+                    className="bg-white text-[#006D68] px-6 py-2 rounded-full font-medium shadow mx-4"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+
               <Link
                 to="/get-help"
                 onClick={closeMobileMenu}

@@ -1,17 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, MessageCircle, X, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "../lib/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 interface Message {
   role: "user" | "bot";
   text: string;
 }
 
-// Generate a random session ID once per component mount
-const generateSessionId = () => {
-  const randomString = Math.random().toString(36).substring(2, 15) + 
-                       Math.random().toString(36).substring(2, 15);
-  return `shy-${randomString}`;
+// Helper to create a new session ID
+const createNewSessionId = () => {
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).slice(2, 8);
+  return `shy-${timestamp}-${randomString}`;
 };
 
 const ALL_LOCATIONS = [
@@ -22,6 +25,14 @@ const ALL_LOCATIONS = [
   "Puchong",
   "Petaling Jaya (PJ)",
   "Kuala Lumpur (KL)",
+];
+
+const QUICK_QUESTIONS = [
+  "What can you do?",
+  "I had unprotected sex",
+  "I need help with STI testing",
+  "How can I prevent pregnancy?",
+  "What are the symptoms of common STIs?"
 ];
 
 export default function ShyChat() {
@@ -35,21 +46,98 @@ export default function ShyChat() {
     localStorage.getItem("shy_gender") || null
   );
   const [locationOptions, setLocationOptions] = useState<string[] | null>(null);
-  const sessionIdRef = useRef(generateSessionId());
+  const [chatEnded, setChatEnded] = useState(false);
+  const [handoffStatus, setHandoffStatus] = useState<"idle" | "pending" | "accepted" | "declined">("idle");
+  const [peerAdvocateId, setPeerAdvocateId] = useState<string | null>(null);
+
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSessionId = searchParams.get("sessionId");
+
+  const sessionIdRef = useRef(urlSessionId || createNewSessionId());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const genderQuestionShownRef = useRef(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize messages on mount
   useEffect(() => {
+    if (urlSessionId) {
+      // If sessionId is provided in URL, fetch existing messages
+      sessionIdRef.current = urlSessionId;
+      setIsOpen(true); // Open chat automatically
+
+      const messagesUrl = user?.id ? `/api/chat/${urlSessionId}/messages?userId=${user.id}` : `/api/chat/${urlSessionId}/messages`;
+      fetch(messagesUrl)
+        .then(res => res.json())
+        .then(data => {
+          if (data.ok && data.messages.length > 0) {
+            // Transform backend messages to frontend format
+            const history: Message[] = data.messages.map((msg: any) => ({
+              role: msg.role === "agent" ? "bot" : "user",
+              text: msg.content
+            }));
+            setMessages(history);
+          } else {
+            showWelcomeMessage();
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch chat history:", err);
+          showWelcomeMessage();
+        });
+    } else {
+      showWelcomeMessage();
+    }
+
+    if (gender === null) {
+      genderQuestionShownRef.current = true;
+    }
+  }, [urlSessionId, user?.id]);
+
+  // Poll for handoff status
+  useEffect(() => {
+    if (handoffStatus === "pending") {
+      pollingIntervalRef.current = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/chat/handoff/status/${sessionIdRef.current}`);
+          const data = await res.json();
+
+          if (data.ok && data.status === "active_peer") {
+            setHandoffStatus("accepted");
+            setPeerAdvocateId(data.peerAdvocateId);
+            if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+
+            setMessages(m => [...m, {
+              role: "bot",
+              text: "You have been connected to a Peer Advocate. Redirecting you to the dashboard..."
+            }]);
+
+            setTimeout(() => {
+              setIsOpen(false);
+              navigate(`/dashboard?sessionId=${sessionIdRef.current}&tab=peer`);
+            }, 2000);
+          }
+        } catch (error) {
+          console.error("Error polling handoff status:", error);
+        }
+      }, 3000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [handoffStatus, navigate]);
+
+  const showWelcomeMessage = () => {
     const welcomeMessage: Message = {
       role: "bot",
       text: "Hey there! 👋 I'm SHYBot, your confidential health companion. I'm here to help answer any questions you have openly, safely, and without judgment. To keep things safe and relevant, may I know your name and your gender identity (male, female, or prefer not to say)? You can share only what you're comfortable with.",
     };
     setMessages([welcomeMessage]);
-    if (gender === null) {
-      genderQuestionShownRef.current = true;
-    }
-  }, []);
+  };
 
   // Show greeting immediately when chat opens if messages are empty
   useEffect(() => {
@@ -129,7 +217,7 @@ export default function ShyChat() {
 
   const handleSendMessage = async () => {
     const text = inputMessage.trim();
-    if (!text) return;
+    if (!text || chatEnded) return;
 
     setMessages((m) => [...m, { role: "user", text }]);
     setInputMessage("");
@@ -174,13 +262,14 @@ export default function ShyChat() {
           userMeta: {
             locale: navigator.language,
             gender: gender,
+            userId: user?.id,
           },
         }),
       });
 
       const data = await res.json();
       const reply = data.reply || "Sorry, I couldn't generate a reply.";
-      
+
       // Check if bot is asking for location
       const lower = reply.toLowerCase();
       const isLocationPrompt =
@@ -209,7 +298,6 @@ export default function ShyChat() {
   };
 
   const handleLocationClick = async (option: string) => {
-    // Show the user's choice as a message
     setMessages((m) => [...m, { role: "user", text: option }]);
     setLocationOptions(null);
 
@@ -217,21 +305,20 @@ export default function ShyChat() {
       option.toLowerCase().includes("campus")
         ? "campus"
         : option.toLowerCase().includes("sunway")
-        ? "sunway"
-        : option.toLowerCase().includes("subang")
-        ? "subang jaya"
-        : option.toLowerCase().includes("shah alam")
-        ? "shah alam"
-        : option.toLowerCase().includes("puchong")
-        ? "puchong"
-        : option.toLowerCase().includes("petaling jaya")
-        ? "pj"
-        : "kl"; // default
+          ? "sunway"
+          : option.toLowerCase().includes("subang")
+            ? "subang jaya"
+            : option.toLowerCase().includes("shah alam")
+              ? "shah alam"
+              : option.toLowerCase().includes("puchong")
+                ? "puchong"
+                : option.toLowerCase().includes("petaling jaya")
+                  ? "pj"
+                  : "kl";
 
     setIsTyping(true);
 
     try {
-      // Call /api/chat with action = "chooseLocation"
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -243,14 +330,14 @@ export default function ShyChat() {
           userMeta: {
             locale: navigator.language,
             gender: gender,
+            userId: user?.id,
           },
         }),
       });
 
       const data = await res.json();
       const reply = data.reply || "Sorry, I couldn't generate a reply.";
-      
-      // Check if bot is asking for location again
+
       const lower = reply.toLowerCase();
       const isLocationPrompt =
         lower.includes("choose your area") ||
@@ -284,6 +371,151 @@ export default function ShyChat() {
     }
   };
 
+  const handleEndChat = () => {
+    if (chatEnded) return;
+
+    const farewellMessage: Message = {
+      role: "bot",
+      text: "Thank you for reaching out to SHY Support 💚\n\n" +
+        "Remember: this chat does not replace a doctor or emergency service. " +
+        "If you feel very unwell, unsafe, or in immediate danger, please contact a trusted adult, " +
+        "campus security, or the nearest clinic/emergency department.\n\n" +
+        "You can start a **new chat** anytime if you have more questions.",
+    };
+    setMessages((m) => [...m, farewellMessage]);
+    setChatEnded(true);
+  };
+
+  const handleStartNewChat = () => {
+    setMessages([]);
+    setChatEnded(false);
+    setLocationOptions(null);
+    setInputMessage("");
+    setGender(null);
+    localStorage.removeItem("shy_gender");
+    genderQuestionShownRef.current = false;
+
+    const newId = createNewSessionId();
+    sessionIdRef.current = newId;
+
+    if (urlSessionId) {
+      setSearchParams({});
+    }
+
+    const welcomeMessage: Message = {
+      role: "bot",
+      text: "Hey there! 👋 I'm SHYBot, your confidential health companion. I'm here to help answer any questions you have openly, safely, and without judgment. To keep things safe and relevant, may I know your name and your gender identity (male, female, or prefer not to say)? You can share only what you're comfortable with.",
+    };
+    setMessages([welcomeMessage]);
+  };
+
+  const handleQuickQuestionClick = (text: string) => {
+    setInputMessage("");
+    setMessages((m) => [...m, { role: "user", text }]);
+
+    if (!gender) {
+      const detected = detectGender(text);
+
+      if (detected) {
+        setGender(detected);
+        localStorage.setItem("shy_gender", detected);
+
+        const confirmationMessage: Message = {
+          role: "bot",
+          text: "Thank you! I'll keep that in mind as we chat. How can I help you now?",
+        };
+        setMessages((m) => [...m, confirmationMessage]);
+        return;
+      }
+
+      const reminderMessage: Message = {
+        role: "bot",
+        text: "Just to answer safely — are you **male** or **female**?",
+      };
+      setMessages((m) => [...m, reminderMessage]);
+      return;
+    }
+
+    setIsTyping(true);
+
+    fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: sessionIdRef.current,
+        message: text,
+        action: "sendMessage",
+        userMeta: {
+          locale: navigator.language,
+          gender: gender,
+          userId: user?.id,
+        },
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const reply = data.reply || "Sorry, I couldn't generate a reply.";
+
+        const lower = reply.toLowerCase();
+        const isLocationPrompt =
+          lower.includes("choose your area") ||
+          lower.includes("which area are you staying") ||
+          lower.includes("where are you staying");
+
+        if (isLocationPrompt) {
+          setLocationOptions(ALL_LOCATIONS);
+        } else {
+          setLocationOptions(null);
+        }
+
+        setMessages((m) => [
+          ...m,
+          { role: "bot", text: reply },
+        ]);
+      })
+      .catch((err) => {
+        setMessages((m) => [
+          ...m,
+          { role: "bot", text: "Network error. Please try again." },
+        ]);
+      })
+      .finally(() => {
+        setIsTyping(false);
+      });
+  };
+
+  const handleRequestHandoff = async () => {
+    if (handoffStatus === "pending" || handoffStatus === "accepted") return;
+
+    try {
+      const res = await fetch("/api/chat/handoff/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: sessionIdRef.current }),
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        setHandoffStatus("pending");
+        setMessages(m => [...m, {
+          role: "bot",
+          text: "I'm looking for an available Peer Advocate to chat with you. Please wait a moment..."
+        }]);
+      } else {
+        setMessages(m => [...m, {
+          role: "bot",
+          text: "Sorry, I couldn't request a handoff at this time. Please try again later."
+        }]);
+      }
+    } catch (error) {
+      console.error("Error requesting handoff:", error);
+      setMessages(m => [...m, {
+        role: "bot",
+        text: "Network error. Please try again."
+      }]);
+    }
+  };
+
   return (
     <>
       {/* Chat Window */}
@@ -298,15 +530,18 @@ export default function ShyChat() {
                   alt="SHY Bot"
                   className="w-full h-full object-contain rounded-full"
                   onError={(e) => {
-                    // Fallback to icon if image fails to load
                     e.currentTarget.style.display = "none";
                   }}
                 />
                 <MessageCircle className="w-6 h-6 text-teal-600" />
               </div>
               <div>
-                <h3 className="text-white font-semibold text-lg">SHY Bot</h3>
-                <p className="text-white/80 text-xs">Sexual Health for Youth</p>
+                <h3 className="text-white font-semibold text-lg">
+                  {handoffStatus === "accepted" ? "Peer Advocate" : "SHY Bot"}
+                </h3>
+                <p className="text-white/80 text-xs">
+                  {handoffStatus === "accepted" ? "Human Support" : "Sexual Health for Youth"}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -350,17 +585,26 @@ export default function ShyChat() {
           {/* Messages Container */}
           {!isMinimized && (
             <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-2">
+              {!user && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 text-xs text-yellow-800 flex items-start gap-2">
+                  <div className="mt-0.5">⚠️</div>
+                  <div>
+                    <strong>Note:</strong> You are chatting anonymously.
+                    <a href="/login" className="underline ml-1 font-medium hover:text-yellow-900">Log in</a> to save your chat history.
+                  </div>
+                </div>
+              )}
+
               {messages.map((message, index) => (
                 <div key={index}>
                   <div
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                        message.role === "user"
-                          ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-br-sm"
-                          : "bg-white border border-teal-100 text-gray-800 rounded-bl-sm shadow-sm"
-                      }`}
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.role === "user"
+                        ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-br-sm"
+                        : "bg-white border border-teal-100 text-gray-800 rounded-bl-sm shadow-sm"
+                        }`}
                       style={{ whiteSpace: "pre-wrap" }}
                     >
                       <div className="text-sm leading-tight">
@@ -381,30 +625,28 @@ export default function ShyChat() {
                       </div>
                     </div>
                   </div>
-                  {/* Show gender buttons after the greeting message if gender is not set */}
-                  {message.role === "bot" && 
-                   index === 0 && 
-                   !gender && 
-                   message.text.includes("SHYBot") && (
-                    <div className="flex justify-start mt-2 mb-2 gap-2">
-                      <button
-                        onClick={() => handleGenderSelect("male")}
-                        className="px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-full text-sm font-medium hover:shadow-lg transition-all hover:scale-105"
-                      >
-                        Male
-                      </button>
-                      <button
-                        onClick={() => handleGenderSelect("female")}
-                        className="px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-full text-sm font-medium hover:shadow-lg transition-all hover:scale-105"
-                      >
-                        Female
-                      </button>
-                    </div>
-                  )}
+                  {message.role === "bot" &&
+                    index === 0 &&
+                    !gender &&
+                    message.text.includes("SHYBot") && (
+                      <div className="flex justify-start mt-2 mb-2 gap-2">
+                        <button
+                          onClick={() => handleGenderSelect("male")}
+                          className="px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-full text-sm font-medium hover:shadow-lg transition-all hover:scale-105"
+                        >
+                          Male
+                        </button>
+                        <button
+                          onClick={() => handleGenderSelect("female")}
+                          className="px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-full text-sm font-medium hover:shadow-lg transition-all hover:scale-105"
+                        >
+                          Female
+                        </button>
+                      </div>
+                    )}
                 </div>
               ))}
 
-              {/* Typing Indicator */}
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="bg-white border border-teal-100 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
@@ -425,7 +667,7 @@ export default function ShyChat() {
           )}
 
           {/* Location Options */}
-          {!isMinimized && locationOptions && (
+          {!isMinimized && locationOptions && !chatEnded && (
             <div className="px-4 pt-2 pb-2 bg-white border-t border-gray-100">
               <div className="flex flex-wrap gap-2">
                 {locationOptions.map((option) => (
@@ -442,6 +684,25 @@ export default function ShyChat() {
             </div>
           )}
 
+          {/* Quick Question Buttons */}
+          {!isMinimized && messages.length <= 3 && gender && !chatEnded && (
+            <div className="px-4 pt-2 pb-2 bg-white border-t border-gray-100">
+              <div className="flex flex-wrap gap-2">
+                {QUICK_QUESTIONS.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    className="px-3 py-1 rounded-full border border-teal-200 text-xs md:text-sm hover:bg-teal-50 transition-colors text-gray-700"
+                    onClick={() => handleQuickQuestionClick(q)}
+                    disabled={isTyping}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Input Area */}
           {!isMinimized && (
             <div className="p-4 bg-white rounded-b-2xl border-t border-gray-100">
@@ -451,18 +712,56 @@ export default function ShyChat() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type your message..."
-                  disabled={isTyping}
+                  placeholder={chatEnded ? "Chat has ended" : "Type your message..."}
+                  disabled={isTyping || chatEnded}
                   className="flex-1 px-4 py-3 rounded-full border border-teal-200 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200 bg-gray-50 text-sm placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isTyping}
+                  disabled={!inputMessage.trim() || isTyping || chatEnded}
                   className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white p-3 rounded-full hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Send message"
                 >
                   <Send size={20} />
                 </button>
+              </div>
+              <div className="mt-2 flex justify-between items-center gap-2">
+                {chatEnded ? (
+                  <>
+                    <button
+                      type="button"
+                      className="text-xs md:text-sm px-3 py-1 rounded-full border border-teal-500 text-teal-600 hover:bg-teal-50 transition"
+                      onClick={handleStartNewChat}
+                    >
+                      Start new chat
+                    </button>
+                    <button
+                      type="button"
+                      className="text-xs md:text-sm px-3 py-1 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 transition"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Close
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="text-xs md:text-sm px-3 py-1 rounded-full border border-purple-500 text-purple-600 hover:bg-purple-50 transition flex items-center gap-1"
+                      onClick={handleRequestHandoff}
+                      disabled={handoffStatus === "pending" || handoffStatus === "accepted"}
+                    >
+                      {handoffStatus === "pending" ? "Waiting for Human..." : handoffStatus === "accepted" ? "Chatting with Human" : "Talk to Human"}
+                    </button>
+                    <button
+                      type="button"
+                      className="ml-auto text-xs md:text-sm px-3 py-1 rounded-full border border-teal-500 text-teal-600 hover:bg-teal-50 transition"
+                      onClick={handleEndChat}
+                    >
+                      End chat
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -472,9 +771,8 @@ export default function ShyChat() {
       {/* Floating Chat Bubble */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-full shadow-2xl hover:shadow-teal-500/50 transition-all duration-300 z-50 flex items-center justify-center group hover:scale-110 ${
-          isOpen ? "scale-0" : "scale-100"
-        }`}
+        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-full shadow-2xl hover:shadow-teal-500/50 transition-all duration-300 z-50 flex items-center justify-center group hover:scale-110 ${isOpen ? "scale-0" : "scale-100"
+          }`}
         aria-label="Open chat"
       >
         <div className="relative">
@@ -483,14 +781,12 @@ export default function ShyChat() {
             alt="Chat with SHY Bot"
             className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
             onError={(e) => {
-              // Fallback to icon if image fails to load
               e.currentTarget.style.display = "none";
               const icon = document.createElement('div');
               icon.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>';
               e.currentTarget.parentElement?.appendChild(icon.firstElementChild!);
             }}
           />
-          {/* Pulse animation */}
           <span className="absolute -top-1 -right-1 flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
@@ -500,4 +796,3 @@ export default function ShyChat() {
     </>
   );
 }
-

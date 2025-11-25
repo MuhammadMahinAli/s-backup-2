@@ -2,6 +2,7 @@ import { RequestHandler } from 'express';
 import { Types } from 'mongoose';
 import { z } from 'zod';
 import { Comment, Post } from '../models';
+import { PeerAdvocate } from '../models/PeerAdvocate';
 import { connectToDatabase } from '../lib/mongodb';
 import { CreateCommentZ } from '../../shared/schemas';
 
@@ -39,11 +40,18 @@ export const createComment: RequestHandler = async (req, res) => {
       return;
     }
 
+    // Check if commenter is a peer advocate
+    const peerAdvocate = await PeerAdvocate.findOne({ 
+      nickname: parsed.nickname,
+      isActive: true 
+    });
+
     // Create the comment
     const comment = await Comment.create({
       postId: new Types.ObjectId(parsed.postId),
       nickname: parsed.nickname,
       text: parsed.text,
+      isPeerAdvocate: !!peerAdvocate,
     });
 
     // Increment post's comment count

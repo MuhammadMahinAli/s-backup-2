@@ -4,6 +4,7 @@ export interface IComment extends Document {
   postId: Types.ObjectId;
   nickname: string;
   text: string;
+  isPeerAdvocate: boolean;
   createdAt: Date;
 }
 
@@ -25,6 +26,10 @@ const CommentSchema = new Schema<IComment>(
       minlength: [5, 'Text must be at least 5 characters'],
       maxlength: [500, 'Text must not exceed 500 characters'],
       trim: true,
+    },
+    isPeerAdvocate: {
+      type: Boolean,
+      default: false,
     },
     createdAt: {
       type: Date,

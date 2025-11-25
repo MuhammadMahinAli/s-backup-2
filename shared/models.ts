@@ -48,3 +48,78 @@ export interface CreateCommentRequest {
   text: string;
 }
 
+// Chat Session and Message types
+export interface ChatSession {
+  _id: string;
+  userId?: string;
+  sessionId: string;
+  type: 'agent' | 'peer';
+  peerAdvocateId?: string;
+  status: 'open' | 'closed';
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  lastMessageAt?: Date | string;
+}
+
+export interface ChatMessage {
+  _id: string;
+  sessionId: string;
+  userId?: string;
+  peerAdvocateId?: string;
+  role: 'user' | 'agent' | 'peer';
+  source: 'agent' | 'peer';
+  content: string;
+  createdAt: Date | string;
+  readAt?: Date | string;
+}
+
+// Request types for chat endpoints
+export interface StartPeerChatRequest {
+  userId?: string;
+  peerAdvocateId?: string;
+}
+
+export interface StartPeerChatResponse {
+  sessionId: string;
+  peerAdvocateId?: string;
+}
+
+export interface SendPeerMessageRequest {
+  content: string;
+  from: 'user' | 'peer';
+}
+
+export interface SendPeerMessageResponse {
+  ok: boolean;
+  message: ChatMessage;
+}
+
+// Auth types
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'student' | 'peer' | 'admin';
+}
+
+export interface SignupRequest {
+  name: string;
+  email: string;
+  password: string;
+  role?: 'student';
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  ok: boolean;
+  user?: User;
+  token?: string;
+  error?: string;
+}
+
+
+

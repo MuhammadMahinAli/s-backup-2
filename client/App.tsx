@@ -1,5 +1,4 @@
 import "./global.css";
-
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,8 +16,16 @@ import Community from "./pages/community";
 import PeerAdvocates from "./pages/PeerAdvocates";
 import MythsVsFacts from "./pages/Mythsvsfacts";
 import DebugCloudinary from "./pages/DebugCloudinary";
+import PeerAdvocateSignup from "./pages/peer-advocate-signup";
+import PeerAdvocateLogin from "./pages/peer-advocate-login";
+import PeerAdvocateDashboard from "./pages/peer-advocate-dashboard";
+import Dashboard from "./components/dashboard";
+import Login from "./components/dashboard/Login";
+import Signup from "./components/dashboard/Signup";
 import { getOrCreateAnonId } from "./lib/anon";
 import { lazy, Suspense } from "react";
+import { AuthProvider } from "./lib/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Lazy-load GetHelp page (uses Leaflet)
 const GetHelp = lazy(() => import("./pages/get_help"));
@@ -37,21 +44,39 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Layout>
+          <AuthProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<AboutUs />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/community" element={<Community />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/get-help" element={<Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><GetHelp /></Suspense>} />
-              <Route path="/peer-advocates" element={<PeerAdvocates />} />
-              <Route path="/myths-vs-facts" element={<MythsVsFacts />} />
-              <Route path="/debug/cloudinary" element={<DebugCloudinary />} />
+              {/* Student Auth Routes (using new JWT system) */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Peer Advocate Routes (using old auth system) */}
+              <Route path="/peer-advocate-signup" element={<PeerAdvocateSignup />} />
+              <Route path="/peer-advocate-login" element={<PeerAdvocateLogin />} />
+              <Route path="/peer-advocate-dashboard" element={<PeerAdvocateDashboard />} />
+
+              {/* Routes WITH Layout (navbar and footer) */}
+              <Route path="/" element={<Layout><Index /></Layout>} />
+              <Route path="/about" element={<Layout><AboutUs /></Layout>} />
+              <Route path="/blog" element={<Layout><Blog /></Layout>} />
+              <Route path="/community" element={<Layout><Community /></Layout>} />
+              <Route path="/contact" element={<Layout><Contact /></Layout>} />
+              <Route path="/get-help" element={<Layout><Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><GetHelp /></Suspense></Layout>} />
+              <Route path="/peer-advocates" element={<Layout><PeerAdvocates /></Layout>} />
+              <Route path="/myths-vs-facts" element={<Layout><MythsVsFacts /></Layout>} />
+              <Route path="/debug/cloudinary" element={<Layout><DebugCloudinary /></Layout>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
-          </Layout>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
