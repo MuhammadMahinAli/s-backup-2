@@ -26,9 +26,10 @@ import { getOrCreateAnonId } from "./lib/anon";
 import { lazy, Suspense } from "react";
 import { AuthProvider } from "./lib/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import GetHelpPage from "./pages/get_help";
 
-// Lazy-load GetHelp page (uses Leaflet)
-const GetHelp = lazy(() => import("./pages/get_help"));
+// Lazy-load clinic testing page (uses Leaflet)
+const ClinicTesting = lazy(() => import("./pages/clinic_testing"));
 
 const queryClient = new QueryClient();
 
@@ -69,7 +70,8 @@ const App = () => {
               <Route path="/blog" element={<Layout><Blog /></Layout>} />
               <Route path="/community" element={<Layout><Community /></Layout>} />
               <Route path="/contact" element={<Layout><Contact /></Layout>} />
-              <Route path="/get-help" element={<Layout><Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><GetHelp /></Suspense></Layout>} />
+              <Route path="/get-help" element={<Layout><GetHelpPage /></Layout>} />
+              <Route path="/clinic-testing" element={<Layout><Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}><ClinicTesting /></Suspense></Layout>} />
               <Route path="/peer-advocates" element={<Layout><PeerAdvocates /></Layout>} />
               <Route path="/myths-vs-facts" element={<Layout><MythsVsFacts /></Layout>} />
               <Route path="/debug/cloudinary" element={<Layout><DebugCloudinary /></Layout>} />

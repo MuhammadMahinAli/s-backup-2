@@ -309,7 +309,7 @@ export default function Index() {
       videoUrl: "https://youtu.be/H89mFVSvXeQ"
     },
     {
-      title: "Safe Practices & Prevention", 
+      title: "Safe Practices & Prevention",
       description: "Essential insights on safe practices and prevention methods",
       duration: "6:42",
       bgColor: "#E4F6F5",
@@ -361,7 +361,7 @@ export default function Index() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 lg:gap-7">
-              <button 
+              <button
                 onClick={() => navigate("/get-help")}
                 className="w-[210px] h-[69px] px-[17px] py-[25px] rounded-full border border-blue-500/20 bg-gradient-to-r from-[#4BB5B9]/80 to-[#02A0A6]/80 shadow-xl backdrop-blur-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity cursor-pointer"
               >
@@ -392,7 +392,7 @@ export default function Index() {
                 </svg>
               </button>
 
-              <button 
+              <button
                 onClick={() => {
                   const educationSection = document.querySelector('[data-section="education-topics"]');
                   if (educationSection) {
@@ -410,35 +410,37 @@ export default function Index() {
 
           {/* Service Cards - Right Side */}
           <div className="absolute right-4 lg:right-16 top-24 hidden lg:flex flex-col gap-[22px]">
-            <ServiceCard
-              title="Clinic"
-              bgGradient="bg-[#93D3D8]"
-              icon={
-                <svg width="33" height="32" viewBox="0 0 33 32" fill="none">
-                  <path
-                    d="M7.15008 3.06666C7.15483 3.15044 7.18581 3.2306 7.23863 3.29581C7.29146 3.36101 7.36345 3.40795 7.44442 3.42998C7.52539 3.45201 7.61123 3.44802 7.68981 3.41857C7.76839 3.38913 7.83571 3.33571 7.88226 3.26589C7.92881 3.19607 7.95222 3.11338 7.94918 3.02952C7.94614 2.94566 7.9168 2.86489 7.86532 2.79862C7.81384 2.73235 7.74283 2.68395 7.66232 2.66027C7.58182 2.63659 7.49591 2.63883 7.41675 2.66666H6.08341C5.37617 2.66666 4.69789 2.94761 4.1978 3.44771C3.6977 3.94781 3.41675 4.62609 3.41675 5.33333V12C3.41675 14.1217 4.2596 16.1566 5.75989 17.6569C7.26018 19.1571 9.29502 20 11.4167 20C13.5385 20 15.5733 19.1571 17.0736 17.6569C18.5739 16.1566 19.4167 14.1217 19.4167 12V5.33333C19.4167 4.62609 19.1358 3.94781 18.6357 3.44771C18.1356 2.94761 17.4573 2.66666 16.7501 2.66666H15.4167"
-                    stroke="#F9FCFF"
-                    strokeWidth="2.66667"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M11.4167 20V21.3333C11.4167 23.4551 12.2596 25.4899 13.7599 26.9902C15.2602 28.4905 17.295 29.3333 19.4167 29.3333C21.5385 29.3333 23.5733 28.4905 25.0736 26.9902C26.5739 25.4899 27.4167 23.4551 27.4167 21.3333V16"
-                    stroke="#F9FCFF"
-                    strokeWidth="2.66667"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M27.4167 16C28.8894 16 30.0833 14.8061 30.0833 13.3333C30.0833 11.8606 28.8894 10.6667 27.4167 10.6667C25.9439 10.6667 24.75 11.8606 24.75 13.3333C24.75 14.8061 25.9439 16 27.4167 16Z"
-                    stroke="#F9FCFF"
-                    strokeWidth="2.66667"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
-            />
+            <div onClick={() => navigate("/clinic-testing")} className="cursor-pointer">
+              <ServiceCard
+                title="Clinic"
+                bgGradient="bg-[#93D3D8]"
+                icon={
+                  <svg width="33" height="32" viewBox="0 0 33 32" fill="none">
+                    <path
+                      d="M7.15008 3.06666C7.15483 3.15044 7.18581 3.2306 7.23863 3.29581C7.29146 3.36101 7.36345 3.40795 7.44442 3.42998C7.52539 3.45201 7.61123 3.44802 7.68981 3.41857C7.76839 3.38913 7.83571 3.33571 7.88226 3.26589C7.92881 3.19607 7.95222 3.11338 7.94918 3.02952C7.94614 2.94566 7.9168 2.86489 7.86532 2.79862C7.81384 2.73235 7.74283 2.68395 7.66232 2.66027C7.58182 2.63659 7.49591 2.63883 7.41675 2.66666H6.08341C5.37617 2.66666 4.69789 2.94761 4.1978 3.44771C3.6977 3.94781 3.41675 4.62609 3.41675 5.33333V12C3.41675 14.1217 4.2596 16.1566 5.75989 17.6569C7.26018 19.1571 9.29502 20 11.4167 20C13.5385 20 15.5733 19.1571 17.0736 17.6569C18.5739 16.1566 19.4167 14.1217 19.4167 12V5.33333C19.4167 4.62609 19.1358 3.94781 18.6357 3.44771C18.1356 2.94761 17.4573 2.66666 16.7501 2.66666H15.4167"
+                      stroke="#F9FCFF"
+                      strokeWidth="2.66667"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M11.4167 20V21.3333C11.4167 23.4551 12.2596 25.4899 13.7599 26.9902C15.2602 28.4905 17.295 29.3333 19.4167 29.3333C21.5385 29.3333 23.5733 28.4905 25.0736 26.9902C26.5739 25.4899 27.4167 23.4551 27.4167 21.3333V16"
+                      stroke="#F9FCFF"
+                      strokeWidth="2.66667"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M27.4167 16C28.8894 16 30.0833 14.8061 30.0833 13.3333C30.0833 11.8606 28.8894 10.6667 27.4167 10.6667C25.9439 10.6667 24.75 11.8606 24.75 13.3333C24.75 14.8061 25.9439 16 27.4167 16Z"
+                      stroke="#F9FCFF"
+                      strokeWidth="2.66667"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                }
+              />
+            </div>
             <div onClick={() => navigate("/peer-advocates")} className="cursor-pointer">
               <ServiceCard
                 title="Peer Advocate"
@@ -480,35 +482,37 @@ export default function Index() {
           </div>
 
           <div className="absolute right-4 lg:right-[340px] top-24 hidden lg:flex flex-col gap-[22px]">
-            <ServiceCard
-              title="Testing"
-              bgGradient="bg-gradient-to-br from-cyan-500/20 to-cyan-500/10"
-              icon={
-                <svg width="33" height="32" viewBox="0 0 33 32" fill="none">
-                  <path
-                    d="M20.0834 2.66667V26C20.0834 27.8667 18.6167 29.3333 16.7501 29.3333C14.8834 29.3333 13.4167 27.8667 13.4167 26V2.66667"
-                    stroke="#4BB5B9"
-                    strokeWidth="2.66667"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12.0833 2.66667H21.4166"
-                    stroke="#4BB5B9"
-                    strokeWidth="2.66667"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M20.0834 21.3333H13.4167"
-                    stroke="#4BB5B9"
-                    strokeWidth="2.66667"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
-            />
+            <div onClick={() => navigate("/clinic-testing")} className="cursor-pointer">
+              <ServiceCard
+                title="Testing"
+                bgGradient="bg-gradient-to-br from-cyan-500/20 to-cyan-500/10"
+                icon={
+                  <svg width="33" height="32" viewBox="0 0 33 32" fill="none">
+                    <path
+                      d="M20.0834 2.66667V26C20.0834 27.8667 18.6167 29.3333 16.7501 29.3333C14.8834 29.3333 13.4167 27.8667 13.4167 26V2.66667"
+                      stroke="#4BB5B9"
+                      strokeWidth="2.66667"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M12.0833 2.66667H21.4166"
+                      stroke="#4BB5B9"
+                      strokeWidth="2.66667"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M20.0834 21.3333H13.4167"
+                      stroke="#4BB5B9"
+                      strokeWidth="2.66667"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                }
+              />
+            </div>
             <div onClick={() => navigate("/myths-vs-facts")} className="cursor-pointer">
               <ServiceCard
                 title="Myths vs Facts"
@@ -578,69 +582,68 @@ export default function Index() {
       {/* Why Youth Sexual Health Matters Section */}
       <section className="w-full bg-[#D4EDF4] py-16">
         <div className="max-w-[1425px] mx-auto px-4 lg:px-16">
-        <div className="flex flex-col items-center gap-12">
-          <h2 className="text-[#226A72] font-['Geist'] text-[48px] font-bold leading-[48px] text-center">
-            Why Youth Sexual Health Matters?
-          </h2>
+          <div className="flex flex-col items-center gap-12">
+            <h2 className="text-[#226A72] font-['Geist'] text-[48px] font-bold leading-[48px] text-center">
+              Why Youth Sexual Health Matters?
+            </h2>
 
-          <div className="flex items-center gap-8 overflow-hidden">
-            <button 
-              onClick={prevFeature}
-              className="w-[54px] h-[370px] p-[2px] border border-white/30 bg-white/20 backdrop-blur-[15px] rounded-[15px] flex justify-center items-center shadow-[0_4px_16px_rgba(31,38,135,0.2)] hover:bg-white/30 transition-all duration-300">
-              <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-                <path
-                  d="M18.8231 7.53697L11.2502 14.9633L18.6765 22.5363"
-                  stroke="#049DBF"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-
-            <div className="flex gap-8 overflow-hidden min-h-[370px] items-center">
-              <div className="flex gap-8 transition-all duration-500 ease-in-out">
-                {features.slice(currentFeatureIndex, currentFeatureIndex + 3).map((feature, index) => (
-                  <FeatureCard
-                    key={currentFeatureIndex + index}
-                    title={feature.title}
-                    description={feature.description}
-                    icon={feature.icon}
+            <div className="flex items-center gap-8 overflow-hidden">
+              <button
+                onClick={prevFeature}
+                className="w-[54px] h-[370px] p-[2px] border border-white/30 bg-white/20 backdrop-blur-[15px] rounded-[15px] flex justify-center items-center shadow-[0_4px_16px_rgba(31,38,135,0.2)] hover:bg-white/30 transition-all duration-300">
+                <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+                  <path
+                    d="M18.8231 7.53697L11.2502 14.9633L18.6765 22.5363"
+                    stroke="#049DBF"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
-                ))}
+                </svg>
+              </button>
+
+              <div className="flex gap-8 overflow-hidden min-h-[370px] items-center">
+                <div className="flex gap-8 transition-all duration-500 ease-in-out">
+                  {features.slice(currentFeatureIndex, currentFeatureIndex + 3).map((feature, index) => (
+                    <FeatureCard
+                      key={currentFeatureIndex + index}
+                      title={feature.title}
+                      description={feature.description}
+                      icon={feature.icon}
+                    />
+                  ))}
+                </div>
               </div>
+
+              <button
+                onClick={nextFeature}
+                className="w-[54px] h-[370px] p-[2px] border border-white/30 bg-white/20 backdrop-blur-[15px] rounded-[15px] flex justify-center items-center shadow-[0_4px_16px_rgba(31,38,135,0.2)] hover:bg-white/30 transition-all duration-300">
+                <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+                  <path
+                    d="M11.1769 7.53697L18.7498 14.9633L11.3235 22.5363"
+                    stroke="#049DBF"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
             </div>
 
-            <button 
-              onClick={nextFeature}
-              className="w-[54px] h-[370px] p-[2px] border border-white/30 bg-white/20 backdrop-blur-[15px] rounded-[15px] flex justify-center items-center shadow-[0_4px_16px_rgba(31,38,135,0.2)] hover:bg-white/30 transition-all duration-300">
-              <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-                <path
-                  d="M11.1769 7.53697L18.7498 14.9633L11.3235 22.5363"
-                  stroke="#049DBF"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+            {/* Indicator dots */}
+            <div className="flex justify-center gap-3 mt-8">
+              {Array.from({ length: features.length - 2 }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentFeatureIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentFeatureIndex
+                      ? 'bg-[#049DBF] scale-110'
+                      : 'bg-white/40 hover:bg-white/60'
+                    }`}
                 />
-              </svg>
-            </button>
+              ))}
+            </div>
           </div>
-          
-          {/* Indicator dots */}
-          <div className="flex justify-center gap-3 mt-8">
-            {Array.from({ length: features.length - 2 }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentFeatureIndex(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentFeatureIndex
-                    ? 'bg-[#049DBF] scale-110'
-                    : 'bg-white/40 hover:bg-white/60'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
         </div>
       </section>
 
@@ -1004,9 +1007,9 @@ export default function Index() {
       </section>
 
       {/* Footer is now globally rendered in Layout */}
-      
+
       {/* Topic Dialog */}
-      <TopicDialog 
+      <TopicDialog
         topic={selectedTopic}
         open={isTopicDialogOpen}
         onOpenChange={setIsTopicDialogOpen}
